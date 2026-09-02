@@ -236,12 +236,18 @@
     </div>
 
     <script>
-        // RICONOSCIMENTO AUTOMATICO DELL'URL API
+        // CONFIGURAZIONE DINAMICA DELL'API
         const hostname = window.location.hostname;
         const isLocal = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "";
-        
-        // Se sei in locale usa il server locale, altrimenti usa lo stesso dominio relativo o il tuo link di Render
-        const API_URL = isLocal ? "http://127.0.0.1:8000/api" : `${window.location.origin}/api`;
+
+        // Se sei in locale chiama 127.0.0.1:8000/api, altrimenti chiama la rotta relativa assoluta '/api'
+        let API_URL = isLocal ? "http://127.0.0.1:8000/api" : `${window.location.origin}/api`;
+
+        // SE IL TUO BACKEND È SU RENDER ED IL FRONTEND È SU GITHUB PAGES/VERCEL/NETLIFY:
+        // Sostituisci il valore sotto con il link del tuo servizio Render!
+        if (!isLocal && window.location.hostname.includes("github.io")) {
+            API_URL = "https://IL-TUO-NOME-APP.onrender.com/api"; 
+        }
 
         document.getElementById('api-endpoint-display').innerText = API_URL;
 
