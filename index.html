@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Probabili Formazioni Live</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f9; }
+        .match-card { background: white; padding: 15px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .teams { font-weight: bold; font-size: 1.2em; color: #333; }
+        .details { margin-top: 10px; font-size: 0.9em; color: #555; }
+    </style>
+</head>
+<body>
+
+    <h1>Probabili Formazioni Serie A</h1>
+    <div id="loading">Caricamento formazioni in corso...</div>
+    <div id="matches-container"></div>
+
+    <script>
+        // URL del tuo backend su Render
+        const API_URL = "https://fanta-6jkw.onrender.com";
+
+        async function caricaFormazioni() {
+            const container = document.getElementById("matches-container");
+            const loading = document.getElementById("loading");
+
+            try {
+                const response = await fetch(`${API_URL}/api/probabili-formazioni-live`);
+                const data = await response.json();
+
+                if (data.status === "success") {
+                    loading.style.display = "none";
+                    container.innerHTML = "";
+
+                    data.matches.forEach(match => {
+                        const card = document.createElement("div");
+                        card.className = "match-card";
+                        card.innerHTML = `
+                            <div class="teams">${match.casa.nome} vs ${match.trasferta.nome}</div>
+                            <div class="details">
+                                <p><strong>Ballottaggi Casa:</strong> ${match.casa.ballottaggi.join(", ") || "Nessuno"}</p>
+                                <p><strong>Ballottaggi Trasferta:</strong> ${match.trasferta.ballottaggi.join(", ") || "Nessuno"}</p>
+                            </div>
+                        `;
+                        container.appendChild(card);
+                    });
+                } else {
+                    loading.textContent = "Errore nel caricamento dei dati.";
+                }
+            } catch (error) {
+                console.error("Errore di connessione:", error);
+                loading.textContent = "Impossibile connettersi al server backend.";
+            }
+        }
+
+        // Avvia la chiamata appena carica la pagina
+        caricaFormazioni();
+    </script>
+</body>
+</html>
