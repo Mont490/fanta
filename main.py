@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -18,14 +18,13 @@ app.add_middleware(
 
 class Giocatore(BaseModel):
     nome: str
-    ruolo: str  # 'P', 'D', 'C', 'A'
+    ruolo: str
     squadra: str
     forma: float
     titolare_prob: float
     avversario_facilita: float
     bonus_attesi: float
     casa: bool
-    # Nuovi campi collegati al web per Statistiche e Voti
     media_voto: float = 6.00
     fantamedia: float = 6.00
     gol: int = 0
@@ -42,7 +41,6 @@ class Giocatore(BaseModel):
         )
         return round(score, 1)
 
-# ROSA REALE BERLUSCA DORTMUND
 ROSA_DB = [
     # Portieri
     Giocatore(nome="De Gea", ruolo="P", squadra="Fiorentina", forma=80, titolare_prob=100, avversario_facilita=70, bonus_attesi=20, casa=True, media_voto=6.45, fantamedia=5.85, gol=0, assist=1),
@@ -79,7 +77,7 @@ def home():
 def get_consigli(ruolo: Optional[str] = None):
     risultato = []
     for g in ROSA_DB:
-        if ruolo is None or ruolo.upper() == "ALL" or g.ruolo == ruolo.upper():
+        if not ruolo or ruolo.upper() == "ALL" or g.ruolo == ruolo.upper():
             risultato.append({
                 "nome": g.nome,
                 "ruolo": g.ruolo,
@@ -124,28 +122,3 @@ def get_formazione_ottimale():
         "titolari": [{"nome": g.nome, "ruolo": g.ruolo, "squadra": g.squadra, "is": g.calcola_is()} for g in best_11],
         "panchina": [{"nome": g.nome, "ruolo": g.ruolo, "squadra": g.squadra, "is": g.calcola_is()} for g in sorted(panchina, key=lambda x: (x.ruolo, -x.calcola_is()))]
     }
-
-@app.get("/api/probabili-formazioni-live")
-def get_probabili_formazioni_live():
-    url = "https://www.fantacalcio.it/probabili-formazioni-serie-a"
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
-    
-    try:
-        res = requests.get(url, headers=headers, timeout=10)
-        soup = BeautifulSoup(res.text, "html.parser")
-        matches = []
-        
-        cards = soup.select(".card-match, .match-card")
-        for card in cards:
-            home = card.select_one(".team-name-home, .home .team-name")
-            away = card.select_one(".team-name-away, .away .team-name")
-            if home and away:
-                matches.append({
-                    "casa": home.text.strip(),
-                    "trasferta": away.text.strip(),
-                    "ballottaggi_casa": [b.text.strip() for b in card.select(".home-ballot .ballot-item")],
-                    "ballottaggi_trasferta": [b.text.strip() for b in card.select(".away-ballot .ballot-item")]
-                })
-        return {"status": "success", "matches": matches}
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
