@@ -17,7 +17,6 @@
             font-size: 14px;
         }
 
-        /* SIDEBAR */
         .sidebar {
             width: 250px;
             background-color: #141A26;
@@ -54,7 +53,6 @@
         }
         .nav-link i { width: 20px; text-align: center; }
 
-        /* CONTENT AREA */
         .main-content { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 
         header {
@@ -73,14 +71,12 @@
         }
         .top-nav button.active { color: #facc15; border-bottom: 2px solid #facc15; }
 
-        /* VIEWS */
         .view-section { display: none; padding: 24px; overflow-y: auto; }
         .view-section.active { display: block; }
 
         .dashboard-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; }
         @media (max-width: 1100px) { .dashboard-grid { grid-template-columns: 1fr; } }
 
-        /* CARDS & COMPONENTS */
         .btn-yellow {
             background: #facc15; color: #000; font-weight: bold; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer;
         }
@@ -94,7 +90,6 @@
         }
         .badge-role.active { background: #facc15; color: #000; border-color: #facc15; }
 
-        /* PLAYER CARD ADVICE */
         .advice-card {
             background: #141A26; border: 1px solid #232D3F; border-radius: 12px; padding: 14px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;
         }
@@ -102,7 +97,6 @@
             width: 42px; height: 42px; border-radius: 50%; border: 2px solid #22c55e; color: #22c55e; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px;
         }
 
-        /* SOCCER PITCH */
         .soccer-field {
             background: radial-gradient(circle, #1E8342 0%, #115E2B 100%); border: 2px solid #232D3F; border-radius: 16px; height: 400px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; position: relative;
         }
@@ -111,7 +105,6 @@
         .player-avatar { width: 34px; height: 34px; border-radius: 50%; border: 2px solid #facc15; background: #000; color: #facc15; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; }
         .player-box { background: rgba(0,0,0,0.85); border: 1px solid #232D3F; padding: 2px 6px; border-radius: 6px; text-align: center; margin-top: 3px; min-width: 60px; }
 
-        /* TABLE STATS */
         .stats-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
         .stats-table th, .stats-table td { padding: 12px; text-align: left; border-bottom: 1px solid #232D3F; }
         .stats-table th { background: #141A26; color: #facc15; font-size: 12px; text-transform: uppercase; }
@@ -120,7 +113,6 @@
 </head>
 <body>
 
-    <!-- SIDEBAR LEFT -->
     <aside class="sidebar">
         <div>
             <div style="text-align: center; padding-bottom: 16px; border-bottom: 1px solid #232D3F; margin-bottom: 20px;">
@@ -149,7 +141,6 @@
         </div>
     </aside>
 
-    <!-- MAIN CONTENT -->
     <div class="main-content">
         <header>
             <nav class="top-nav">
@@ -165,10 +156,8 @@
             </div>
         </header>
 
-        <!-- VISTA DASHBOARD -->
         <div id="view-dashboard" class="view-section active">
             <div class="dashboard-grid">
-                <!-- SEZIONE CONSIGLI -->
                 <div>
                     <h2 style="font-size: 18px; margin-bottom: 4px;"><i class="fa-solid fa-wand-magic-sparkles" style="color: #facc15;"></i> Consigli Giocatori</h2>
                     <p style="font-size: 11px; color: #888; margin-bottom: 12px;">I migliori della rosa da schierare questa giornata.</p>
@@ -184,7 +173,6 @@
                     <div id="advice-list">Inizializzazione...</div>
                 </div>
 
-                <!-- SEZIONE FORMAZIONE BERLUSCA -->
                 <div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                         <h2 style="font-size: 18px;"><i class="fa-solid fa-shield-halved" style="color: #facc15;"></i> Mia Formazione Optimal</h2>
@@ -205,14 +193,12 @@
             </div>
         </div>
 
-        <!-- VISTA CONSIGLI GIOCATORI DETTAGLIATA -->
         <div id="view-consigli" class="view-section">
             <h2 style="font-size: 20px; margin-bottom: 8px;"><i class="fa-solid fa-wand-magic-sparkles" style="color: #facc15;"></i> Consigli Approfonditi</h2>
             <p style="color: #888; margin-bottom: 20px;">Analisi algoritmica basata su avversari, stato di forma e indice di schierabilità.</p>
             <div id="advice-list-full"></div>
         </div>
 
-        <!-- VISTA STATISTICHE GIOCATORI -->
         <div id="view-statistiche" class="view-section">
             <h2 style="font-size: 20px; margin-bottom: 8px;"><i class="fa-solid fa-chart-simple" style="color: #facc15;"></i> Statistiche Giocatori (Rosa Berlusca Dortmund)</h2>
             <p style="color: #888; margin-bottom: 16px;">Rendimento e numeri stagionali collegati live dal web.</p>
@@ -230,19 +216,16 @@
                         <th>Indice IS</th>
                     </tr>
                 </thead>
-                <tbody id="stats-table-body">
-                </tbody>
+                <tbody id="stats-table-body"></tbody>
             </table>
         </div>
 
-        <!-- VISTA VOTI E MEDIA -->
         <div id="view-voti" class="view-section">
             <h2 style="font-size: 20px; margin-bottom: 8px;"><i class="fa-solid fa-star" style="color: #facc15;"></i> Voti e Media Fantacalcio</h2>
             <p style="color: #888; margin-bottom: 20px;">Storico delle prestazioni e media voto della tua rosa.</p>
             <div id="voti-list-container" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;"></div>
         </div>
 
-        <!-- VISTA IMPOSTAZIONI -->
         <div id="view-impostazioni" class="view-section">
             <h2 style="font-size: 20px; margin-bottom: 8px;"><i class="fa-solid fa-gear" style="color: #facc15;"></i> Impostazioni</h2>
             <p style="color: #888; margin-bottom: 16px;">Configurazione parametri e backend Python.</p>
@@ -250,14 +233,15 @@
                 <p>Endpoint API: <code id="api-endpoint-display"></code></p>
             </div>
         </div>
-
     </div>
 
     <script>
-        // Riconoscimento automatico dell'URL API
-        const API_URL = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") 
-            ? "http://127.0.0.1:8000/api" 
-            : `${window.location.origin}/api`;
+        // RICONOSCIMENTO AUTOMATICO DELL'URL API
+        const hostname = window.location.hostname;
+        const isLocal = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "";
+        
+        // Se sei in locale usa il server locale, altrimenti usa lo stesso dominio relativo o il tuo link di Render
+        const API_URL = isLocal ? "http://127.0.0.1:8000/api" : `${window.location.origin}/api`;
 
         document.getElementById('api-endpoint-display').innerText = API_URL;
 
@@ -304,7 +288,7 @@
                 }
                 if (list) {
                     list.innerHTML = `<div style="color:#ef4444; font-size:12px; padding:12px; background:#1f1215; border:1px solid #7f1d1d; border-radius:8px;">
-                        ⚠️ Impossibile caricare i giocatori. Verifica che main.py sia in esecuzione su porta 8000.
+                        ⚠️ Impossibile caricare i giocatori. Verifica che main.py sia in esecuzione.
                     </div>`;
                 }
             }
