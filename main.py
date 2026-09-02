@@ -31,43 +31,47 @@ def get_probabili_formazioni_live():
 
         soup = BeautifulSoup(response.text, "html.parser")
         
-        # Cerca i blocchi delle partite
-        match_cards = soup.select(".card.card-match, .match-card, .card-match-wrapper")
+        # Struttura contenitori partite su Fantacalcio.it
+        match_cards = soup.find_all("li", class_="match-item") or soup.find_all("div", class_="match")
 
         risultati = []
 
         for card in match_cards:
-            # Estrazione nomi squadre
-            teams = card.select(".team-name, .team-title, .team")
-            home_name = teams[0].text.strip() if len(teams) > 0 else "Casa"
-            away_name = teams[1].text.strip() if len(teams) > 1 else "Trasferta"
+            # Squadre
+            home_team = card.find("span", class_="team-name-home") or card.select_one(".home .team-name")
+            away_team = card.find("span", class_="team-name-away") or card.select_one(".away .team-name")
 
-            # Estrazione liste generali (titolari, ballottaggi, squalificati)
-            items = [item.text.strip() for item in card.select(".player-name, .ballot-item, .player")]
+            if not home_team or not away_team:
+                continue
+
+            # Giocatori titolari / Formazioni
+            home_players = [p.text.strip() for p in card.select(".home .player-name, .home .player")]
+            away_players = [p.text.strip() for p in card.select(".away .player-name, .away .player")]
+
+            # Ballottaggi
+            ballottaggi = [b.text.strip() for b in card.select(".ballot-item, .ballottaggio")]
 
             risultati.append({
                 "casa": {
-                    "nome": home_name,
-                    "dettagli": items[:len(items)//2]
+                    "nome": home_team.text.strip(),
+                    "titolari": home_players if home_players else ["In attesa di inserimento"]
                 },
                 "trasferta": {
-                    "nome": away_name,
-                    "dettagli": items[len(items)//2:]
-                }
+                    "nome": away_team.text.strip(),
+                    "titolari": away_players if away_players else ["In attesa di inserimento"]
+                },
+                "ballottaggi": ballottaggi
             })
 
-        # Fallback nel caso in cui i selettori fossero diversi
         if not risultati:
-            return {
-                "status": "success",
-                "message": "Partite in fase di aggiornamento su Fantacalcio.it",
-                "matches": [
-                    {
-                        "casa": {"nome": "Inter", "dettagli": ["Lautaro (60%)", "Thuram (40%)"]},
-                        "trasferta": {"nome": "Juventus", "dettagli": ["Vlahovic (70%)", "Yildiz (30%)"]}
-                    }
-                ]
-            }
+            # Se la pagina cambia struttura improvvisamente, estraiamo i nomi dei club generici
+            teams = [t.text.strip() for t in soup.select(".team-name")]
+            for i in range(0, len(teams) - 1, 2):
+                risultati.append({
+                    "casa": {"nome": teams[i], "titolari": ["Vedi scheda completa su Fantacalcio"]},
+                    "trasferta": {"nome": teams[i+1], "titolari": ["Vedi scheda completa su Fantacalcio"]},
+                    "ballottaggi": []
+                })
 
         return {"status": "success", "matches": risultati}
 
