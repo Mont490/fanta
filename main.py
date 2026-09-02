@@ -3,8 +3,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-import requests
-from bs4 import BeautifulSoup
 
 app = FastAPI(title="Berlusca Dortmund API")
 
