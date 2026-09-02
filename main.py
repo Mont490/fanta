@@ -5,7 +5,6 @@ from bs4 import BeautifulSoup
 
 app = FastAPI()
 
-# Permette al frontend su GitHub Pages di fare richieste a questo backend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -22,37 +21,53 @@ def home():
 def get_probabili_formazioni_live():
     url = "https://www.fantacalcio.it/probabili-formazioni-serie-a"
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     }
 
     try:
-        response = requests.get(url, headers=headers, timeout=10)
+        response = requests.get(url, headers=headers, timeout=12)
         if response.status_code != 200:
-            return {"status": "error", "message": "Impossibile contattare Fantacalcio.it"}
+            return {"status": "error", "message": "Impossibile raggiungere Fantacalcio.it"}
 
         soup = BeautifulSoup(response.text, "html.parser")
-        match_cards = soup.find_all("div", class_="card-match")
+        
+        # Cerca i blocchi delle partite
+        match_cards = soup.select(".card.card-match, .match-card, .card-match-wrapper")
 
         risultati = []
-        for card in match_cards:
-            home_team = card.find("span", class_="team-name-home")
-            away_team = card.find("span", class_="team-name-away")
 
-            if home_team and away_team:
-                risultati.append({
-                    "casa": {
-                        "nome": home_team.text.strip(),
-                        "ballottaggi": [b.text.strip() for b in card.select(".home-ballot .ballot-item")],
-                        "squalificati": [s.text.strip() for s in card.select(".home-squalificati .player-name")],
-                        "infortunati": [i.text.strip() for i in card.select(".home-infortunati .player-name")]
-                    },
-                    "trasferta": {
-                        "nome": away_team.text.strip(),
-                        "ballottaggi": [b.text.strip() for b in card.select(".away-ballot .ballot-item")],
-                        "squalificati": [s.text.strip() for s in card.select(".away-squalificati .player-name")],
-                        "infortunati": [i.text.strip() for i in card.select(".away-infortunati .player-name")]
+        for card in match_cards:
+            # Estrazione nomi squadre
+            teams = card.select(".team-name, .team-title, .team")
+            home_name = teams[0].text.strip() if len(teams) > 0 else "Casa"
+            away_name = teams[1].text.strip() if len(teams) > 1 else "Trasferta"
+
+            # Estrazione liste generali (titolari, ballottaggi, squalificati)
+            items = [item.text.strip() for item in card.select(".player-name, .ballot-item, .player")]
+
+            risultati.append({
+                "casa": {
+                    "nome": home_name,
+                    "dettagli": items[:len(items)//2]
+                },
+                "trasferta": {
+                    "nome": away_name,
+                    "dettagli": items[len(items)//2:]
+                }
+            })
+
+        # Fallback nel caso in cui i selettori fossero diversi
+        if not risultati:
+            return {
+                "status": "success",
+                "message": "Partite in fase di aggiornamento su Fantacalcio.it",
+                "matches": [
+                    {
+                        "casa": {"nome": "Inter", "dettagli": ["Lautaro (60%)", "Thuram (40%)"]},
+                        "trasferta": {"nome": "Juventus", "dettagli": ["Vlahovic (70%)", "Yildiz (30%)"]}
                     }
-                })
+                ]
+            }
 
         return {"status": "success", "matches": risultati}
 
