@@ -3,62 +3,618 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Probabili Formazioni Serie A - Live</title>
+    <title>Berlusca Dortmund - Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background-color: #0b0f17; color: #ffffff; }
-        h1 { color: #facc15; text-align: center; }
-        .match-card { background: #141a26; border: 1px solid #232d3f; padding: 16px; margin-bottom: 16px; border-radius: 10px; }
-        .teams { font-weight: bold; font-size: 1.2em; color: #facc15; margin-bottom: 8px; }
-        .status-box { text-align: center; color: #9ca3af; padding: 20px; background: #141a26; border-radius: 8px; border: 1px solid #232d3f; }
-        .badge { background: #1c2433; color: #22c55e; padding: 4px 8px; border-radius: 4px; font-size: 0.85em; font-weight: bold; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: #0B0F17;
+            color: #ffffff;
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex;
+            min-height: 100vh;
+            font-size: 14px;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 250px;
+            background-color: #141A26;
+            border-right: 1px solid #232D3F;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px 16px;
+            flex-shrink: 0;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 10px;
+            color: #9CA3AF;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 4px;
+            background: transparent;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover { color: #ffffff; background: #1C2433; }
+        .nav-link.active {
+            background: #1C2433;
+            color: #facc15;
+            border-color: rgba(250, 204, 21, 0.2);
+        }
+        .nav-link i { width: 20px; text-align: center; }
+
+        /* CONTENT AREA */
+        .main-content { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+        header {
+            height: 65px;
+            border-bottom: 1px solid #232D3F;
+            padding: 0 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #141A26;
+        }
+
+        .top-nav { display: flex; gap: 20px; }
+        .top-nav button {
+            background: none; border: none; color: #9CA3AF; font-weight: 600; font-size: 13px; cursor: pointer; padding-bottom: 4px;
+        }
+        .top-nav button.active { color: #facc15; border-bottom: 2px solid #facc15; }
+
+        /* VIEWS */
+        .view-section { display: none; padding: 24px; overflow-y: auto; }
+        .view-section.active { display: block; }
+
+        .dashboard-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; }
+        @media (max-width: 1100px) { .dashboard-grid { grid-template-columns: 1fr; } }
+
+        /* CARDS & COMPONENTS */
+        .btn-yellow {
+            background: #facc15; color: #000; font-weight: bold; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer;
+        }
+        .btn-outline {
+            background: #0B0F17; border: 1px solid #232D3F; color: #fff; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600;
+        }
+        .btn-outline:hover { border-color: #facc15; }
+
+        .badge-role {
+            background: #141A26; border: 1px solid #232D3F; color: #d1d5db; padding: 6px 14px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 12px;
+        }
+        .badge-role.active { background: #facc15; color: #000; border-color: #facc15; }
+
+        /* PLAYER CARD ADVICE */
+        .advice-card {
+            background: #141A26; border: 1px solid #232D3F; border-radius: 12px; padding: 14px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;
+        }
+        .advice-score {
+            width: 42px; height: 42px; border-radius: 50%; border: 2px solid #22c55e; color: #22c55e; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px;
+        }
+
+        /* SOCCER PITCH */
+        .soccer-field {
+            background: radial-gradient(circle, #1E8342 0%, #115E2B 100%); border: 2px solid #232D3F; border-radius: 16px; height: 400px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; position: relative;
+        }
+        .field-row { display: flex; justify-content: space-around; align-items: center; width: 100%; z-index: 2; }
+        .player-pitch-item { display: flex; flex-direction: column; align-items: center; }
+        .player-avatar { width: 34px; height: 34px; border-radius: 50%; border: 2px solid #facc15; background: #000; color: #facc15; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; }
+        .player-box { background: rgba(0,0,0,0.85); border: 1px solid #232D3F; padding: 2px 6px; border-radius: 6px; text-align: center; margin-top: 3px; min-width: 60px; }
+
+        /* MATCH CARD PROBABILI FORMAZIONI */
+        .giornata-select-container {
+            display: flex; align-items: center; gap: 12px; background: #141A26; border: 1px solid #232D3F; padding: 10px 16px; border-radius: 10px; margin-bottom: 16px;
+        }
+        .giornata-select {
+            background: #0B0F17; color: #facc15; border: 1px solid #232D3F; padding: 8px 12px; border-radius: 6px; font-weight: bold; outline: none; cursor: pointer;
+        }
+
+        .match-selector-bar {
+            display: flex; gap: 10px; overflow-x: auto; padding-bottom: 12px; margin-bottom: 20px;
+        }
+        .match-chip {
+            background: #141A26; border: 1px solid #232D3F; padding: 10px 16px; border-radius: 10px; cursor: pointer; text-align: center; white-space: nowrap; transition: all 0.2s;
+        }
+        .match-chip.active, .match-chip:hover {
+            border-color: #facc15; background: #1C2433;
+        }
+
+        .team-formation-box {
+            background: #141A26; border: 1px solid #232D3F; border-radius: 12px; padding: 16px;
+        }
+
+        /* TABLE STATS */
+        .stats-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+        .stats-table th, .stats-table td { padding: 12px; text-align: left; border-bottom: 1px solid #232D3F; }
+        .stats-table th { background: #141A26; color: #facc15; font-size: 12px; text-transform: uppercase; }
+        .stats-table tr:hover { background: #141A26; }
     </style>
 </head>
 <body>
 
-    <h1>Probabili Formazioni Serie A</h1>
-    <div id="loading" class="status-box">
-        <p>⏳ Connessione al server in corso...</p>
-        <small style="color: #6b7280;">(Se il server Render era in pausa, l'avvio richiede circa 30 secondi)</small>
+    <!-- SIDEBAR LEFT -->
+    <aside class="sidebar">
+        <div>
+            <div style="text-align: center; padding-bottom: 16px; border-bottom: 1px solid #232D3F; margin-bottom: 20px;">
+                <div style="width: 70px; height: 70px; border-radius: 50%; border: 3px solid #facc15; background: #000; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center;">
+                    <div style="font-size: 9px; font-weight: 900; color: #facc15; text-align: center;">BERLUSCA<br>DORTMUND</div>
+                </div>
+                <h1 style="font-size: 15px; color: #facc15; font-weight: bold;">Berlusca Dortmund</h1>
+                <span id="sidebar-formation-badge" style="background: #0B0F17; border: 1px solid #232D3F; padding: 2px 8px; border-radius: 10px; font-size: 10px; color: #aaa; margin-top: 4px; display: inline-block;">4-3-3</span>
+            </div>
+
+            <nav>
+                <button class="nav-link active" onclick="switchTab('dashboard', this)"><i class="fa-solid fa-border-all"></i> Dashboard</button>
+                <button class="nav-link" onclick="switchTab('consigli', this)"><i class="fa-solid fa-wand-magic-sparkles"></i> Consigli Giocatori</button>
+                <button class="nav-link" onclick="switchTab('formazioni', this)"><i class="fa-solid fa-people-roof"></i> Probabili Formazioni</button>
+                <button class="nav-link" onclick="switchTab('statistiche', this)"><i class="fa-solid fa-chart-simple"></i> Statistiche Giocatori</button>
+                <button class="nav-link" onclick="switchTab('voti', this)"><i class="fa-solid fa-star"></i> Voti e Media</button>
+                <button class="nav-link" onclick="switchTab('impostazioni', this)"><i class="fa-solid fa-gear"></i> Impostazioni</button>
+            </nav>
+        </div>
+
+        <div style="padding-top: 12px; border-top: 1px solid #232D3F; display: flex; align-items: center; gap: 10px;">
+            <div style="width: 32px; height: 32px; border-radius: 50%; background: #facc15; color: #000; font-weight: bold; display: flex; align-items: center; justify-content: center; font-size: 12px;">GM</div>
+            <div>
+                <div style="font-size: 12px; font-weight: bold;">Gabriele</div>
+                <div style="font-size: 10px; color: #888;">Presidente</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <header>
+            <nav class="top-nav">
+                <button id="topnav-dashboard" class="active" onclick="switchTabName('dashboard')">Dashboard</button>
+                <button id="topnav-consigli" onclick="switchTabName('consigli')">Consigli</button>
+                <button id="topnav-formazioni" onclick="switchTabName('formazioni')">Probabili Formazioni</button>
+                <button id="topnav-statistiche" onclick="switchTabName('statistiche')">Statistiche</button>
+                <button id="topnav-voti" onclick="switchTabName('voti')">Voti e Media</button>
+            </nav>
+
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span id="backend-status" style="font-size: 11px; font-weight: bold; color: #22c55e;">Online</span>
+                <button class="btn-outline" onclick="caricaDati()"><i class="fa-solid fa-rotate" style="color: #facc15;"></i></button>
+            </div>
+        </header>
+
+        <!-- VISTA DASHBOARD -->
+        <div id="view-dashboard" class="view-section active">
+            <div class="dashboard-grid">
+                <!-- SEZIONE CONSIGLI -->
+                <div>
+                    <h2 style="font-size: 18px; margin-bottom: 4px;"><i class="fa-solid fa-wand-magic-sparkles" style="color: #facc15;"></i> Consigli Giocatori</h2>
+                    <p style="font-size: 11px; color: #888; margin-bottom: 12px;">I migliori della rosa da schierare questa giornata.</p>
+
+                    <div style="display: flex; gap: 6px; margin-bottom: 14px;">
+                        <button class="badge-role active" onclick="filterRole(this, 'ALL')">Tutti</button>
+                        <button class="badge-role" onclick="filterRole(this, 'P')">Portieri</button>
+                        <button class="badge-role" onclick="filterRole(this, 'D')">Difensori</button>
+                        <button class="badge-role" onclick="filterRole(this, 'C')">Centrocampisti</button>
+                        <button class="badge-role" onclick="filterRole(this, 'A')">Attaccanti</button>
+                    </div>
+
+                    <div id="advice-list">Caricamento...</div>
+                </div>
+
+                <!-- SEZIONE FORMAZIONE BERLUSCA -->
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h2 style="font-size: 18px;"><i class="fa-solid fa-shield-halved" style="color: #facc15;"></i> Mia Formazione Optimal</h2>
+                        <span id="formation-select" style="background: #141A26; border: 1px solid #232D3F; padding: 4px 8px; border-radius: 6px; color: #facc15; font-weight: bold; font-size: 12px;">4-3-3</span>
+                    </div>
+
+                    <div class="soccer-field">
+                        <div id="tactical-pitch" style="height: 100%; display: flex; flex-direction: column; justify-content: space-between;"></div>
+                    </div>
+
+                    <h3 style="font-size: 11px; text-transform: uppercase; color: #888; margin: 14px 0 8px;">Panchina Suggerita</h3>
+                    <div id="bench-list" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px;"></div>
+
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-yellow" style="flex: 1;" onclick="alert('Formazione Salvata!')">Salva Formazione</button>
+                        <button class="btn-outline" style="flex: 1;" onclick="switchTabName('formazioni')">Vedi Serie A</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA CONSIGLI GIOCATORI DETTAGLIATA -->
+        <div id="view-consigli" class="view-section">
+            <h2 style="font-size: 20px; margin-bottom: 8px;"><i class="fa-solid fa-wand-magic-sparkles" style="color: #facc15;"></i> Consigli Approfonditi</h2>
+            <p style="color: #888; margin-bottom: 20px;">Analisi algoritmica basata su avversari, stato di forma e indice di schierabilità.</p>
+            <div id="advice-list-full"></div>
+        </div>
+
+        <!-- VISTA PROBABILI FORMAZIONI (SERIE A 1-38) -->
+        <div id="view-formazioni" class="view-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <div>
+                    <h2 style="font-size: 20px;"><i class="fa-solid fa-people-roof" style="color: #facc15;"></i> Probabili Formazioni Serie A</h2>
+                    <p style="color: #888; font-size: 12px;">Consulta il calendario e le probabili formazioni ufficiali giornata per giornata.</p>
+                </div>
+                <span style="background: #22c55e22; border: 1px solid #22c55e; color: #22c55e; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold;">● Serie A 2026/2027</span>
+            </div>
+
+            <!-- SELETTORE GIORNATA DA TENDINA -->
+            <div class="giornata-select-container">
+                <i class="fa-solid fa-calendar-days" style="color: #facc15; font-size: 16px;"></i>
+                <label for="select-giornata" style="font-weight: bold; font-size: 13px;">Seleziona Giornata:</label>
+                <select id="select-giornata" class="giornata-select" onchange="changeGiornata(this.value)">
+                </select>
+                <span id="giornata-date-info" style="font-size: 12px; color: #888; margin-left: auto;"></span>
+            </div>
+
+            <!-- SELETTORE PARTITA DELLA GIORNATA -->
+            <div class="match-selector-bar" id="match-selector-container">
+            </div>
+
+            <!-- SCHEDA DETTAGLIO PARTITA CORRENTE -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;" id="match-details-container">
+            </div>
+        </div>
+
+        <!-- VISTA STATISTICHE GIOCATORI (MEDIA, FANTAMEDIA, GOL, ASSIST) -->
+        <div id="view-statistiche" class="view-section">
+            <h2 style="font-size: 20px; margin-bottom: 8px;"><i class="fa-solid fa-chart-simple" style="color: #facc15;"></i> Statistiche Giocatori (Rosa Berlusca Dortmund)</h2>
+            <p style="color: #888; margin-bottom: 16px;">Rendimento e numeri stagionali collegati live dal web.</p>
+
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th>Giocatore</th>
+                        <th>Ruolo</th>
+                        <th>Squadra</th>
+                        <th>Media Voto</th>
+                        <th>Fantamedia</th>
+                        <th>Gol</th>
+                        <th>Assist</th>
+                        <th>Indice IS</th>
+                    </tr>
+                </thead>
+                <tbody id="stats-table-body">
+                </tbody>
+            </table>
+        </div>
+
+        <!-- VISTA VOTI E MEDIA -->
+        <div id="view-voti" class="view-section">
+            <h2 style="font-size: 20px; margin-bottom: 8px;"><i class="fa-solid fa-star" style="color: #facc15;"></i> Voti e Media Fantacalcio</h2>
+            <p style="color: #888; margin-bottom: 20px;">Storico delle prestazioni e media voto della tua rosa.</p>
+            <div id="voti-list-container" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;"></div>
+        </div>
+
+        <!-- VISTA IMPOSTAZIONI -->
+        <div id="view-impostazioni" class="view-section">
+            <h2 style="font-size: 20px; margin-bottom: 8px;"><i class="fa-solid fa-gear" style="color: #facc15;"></i> Impostazioni</h2>
+            <p style="color: #888; margin-bottom: 16px;">Configurazione parametri e backend Python.</p>
+            <div style="background: #141A26; border: 1px solid #232D3F; padding: 16px; border-radius: 10px;">
+                <p>Endpoint API: <code id="api-endpoint-display"></code></p>
+            </div>
+        </div>
+
     </div>
-    <div id="matches-container"></div>
 
     <script>
-        const API_URL = "https://fanta-6jkw.onrender.com";
+        // Riconosce automaticamente l'URL se è su Render o in locale
+        const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
+            ? "http://127.0.0.1:8000/api" 
+            : "/api";
 
-        async function caricaFormazioni() {
-            const container = document.getElementById("matches-container");
-            const loading = document.getElementById("loading");
+        document.getElementById('api-endpoint-display').innerText = API_URL;
 
-            try {
-                const response = await fetch(`${API_URL}/api/probabili-formazioni-live`);
-                const data = await response.json();
+        const calendarioSerieA = {
+            1: { data: "23/08/2026", matches: [["ATALANTA", "SASSUOLO"], ["BOLOGNA", "LAZIO"], ["FROSINONE", "JUVENTUS"], ["GENOA", "NAPOLI"], ["INTER", "MONZA"], ["PARMA", "CAGLIARI"], ["ROMA", "FIORENTINA"], ["TORINO", "MILAN"], ["UDINESE", "COMO"], ["VENEZIA", "LECCE"]] },
+            2: { data: "30/08/2026", matches: [["ATALANTA", "BOLOGNA"], ["CAGLIARI", "INTER"], ["FIORENTINA", "FROSINONE"], ["JUVENTUS", "PARMA"], ["LAZIO", "GENOA"], ["LECCE", "ROMA"], ["MILAN", "VENEZIA"], ["MONZA", "UDINESE"], ["NAPOLI", "COMO"], ["SASSUOLO", "TORINO"]] },
+            3: { data: "06/09/2026", matches: [["BOLOGNA", "SASSUOLO"], ["CAGLIARI", "LECCE"], ["FIORENTINA", "TORINO"], ["FROSINONE", "VENEZIA"], ["GENOA", "COMO"], ["INTER", "NAPOLI"], ["JUVENTUS", "MILAN"], ["PARMA", "MONZA"], ["ROMA", "ATALANTA"], ["UDINESE", "LAZIO"]] },
+            4: { data: "13/09/2026", matches: [["ATALANTA", "CAGLIARI"], ["COMO", "PARMA"], ["GENOA", "FROSINONE"], ["INTER", "UDINESE"], ["LAZIO", "MILAN"], ["LECCE", "MONZA"], ["NAPOLI", "BOLOGNA"], ["SASSUOLO", "JUVENTUS"], ["TORINO", "ROMA"], ["VENEZIA", "FIORENTINA"]] },
+            5: { data: "20/09/2026", matches: [["BOLOGNA", "INTER"], ["FIORENTINA", "COMO"], ["FROSINONE", "SASSUOLO"], ["JUVENTUS", "LAZIO"], ["MILAN", "ATALANTA"], ["MONZA", "CAGLIARI"], ["PARMA", "TORINO"], ["ROMA", "GENOA"], ["UDINESE", "LECCE"], ["VENEZIA", "NAPOLI"]] },
+            6: { data: "11/10/2026", matches: [["ATALANTA", "VENEZIA"], ["CAGLIARI", "JUVENTUS"], ["COMO", "ROMA"], ["GENOA", "FIORENTINA"], ["INTER", "PARMA"], ["LAZIO", "MONZA"], ["LECCE", "BOLOGNA"], ["NAPOLI", "FROSINONE"], ["SASSUOLO", "MILAN"], ["TORINO", "UDINESE"]] },
+            7: { data: "18/10/2026", matches: [["BOLOGNA", "TORINO"], ["FIORENTINA", "NAPOLI"], ["FROSINONE", "COMO"], ["JUVENTUS", "ATALANTA"], ["MILAN", "LECCE"], ["MONZA", "SASSUOLO"], ["PARMA", "GENOA"], ["ROMA", "INTER"], ["UDINESE", "CAGLIARI"], ["VENEZIA", "LAZIO"]] },
+            8: { data: "25/10/2026", matches: [["ATALANTA", "FROSINONE"], ["CAGLIARI", "BOLOGNA"], ["COMO", "SASSUOLO"], ["GENOA", "VENEZIA"], ["INTER", "FIORENTINA"], ["LAZIO", "PARMA"], ["LECCE", "JUVENTUS"], ["NAPOLI", "ROMA"], ["TORINO", "MONZA"], ["UDINESE", "MILAN"]] },
+            9: { data: "28/10/2026", matches: [["FIORENTINA", "ATALANTA"], ["FROSINONE", "LECCE"], ["GENOA", "JUVENTUS"], ["MILAN", "BOLOGNA"], ["MONZA", "NAPOLI"], ["PARMA", "UDINESE"], ["ROMA", "CAGLIARI"], ["SASSUOLO", "LAZIO"], ["TORINO", "COMO"], ["VENEZIA", "INTER"]] },
+            10: { data: "01/11/2026", matches: [["ATALANTA", "PARMA"], ["BOLOGNA", "MONZA"], ["COMO", "VENEZIA"], ["FROSINONE", "TORINO"], ["JUVENTUS", "NAPOLI"], ["LAZIO", "CAGLIARI"], ["LECCE", "GENOA"], ["MILAN", "INTER"], ["SASSUOLO", "FIORENTINA"], ["UDINESE", "ROMA"]] },
+            11: { data: "08/11/2026", matches: [["CAGLIARI", "FROSINONE"], ["FIORENTINA", "JUVENTUS"], ["GENOA", "MILAN"], ["INTER", "COMO"], ["MONZA", "ATALANTA"], ["NAPOLI", "LAZIO"], ["PARMA", "BOLOGNA"], ["ROMA", "SASSUOLO"], ["TORINO", "LECCE"], ["VENEZIA", "UDINESE"]] },
+            12: { data: "22/11/2026", matches: [["ATALANTA", "INTER"], ["BOLOGNA", "UDINESE"], ["COMO", "CAGLIARI"], ["JUVENTUS", "VENEZIA"], ["LAZIO", "LECCE"], ["MILAN", "FROSINONE"], ["MONZA", "FIORENTINA"], ["NAPOLI", "TORINO"], ["PARMA", "ROMA"], ["SASSUOLO", "GENOA"]] },
+            13: { data: "29/11/2026", matches: [["CAGLIARI", "MILAN"], ["COMO", "JUVENTUS"], ["FROSINONE", "PARMA"], ["INTER", "GENOA"], ["LECCE", "ATALANTA"], ["ROMA", "MONZA"], ["SASSUOLO", "NAPOLI"], ["TORINO", "LAZIO"], ["UDINESE", "FIORENTINA"], ["VENEZIA", "BOLOGNA"]] },
+            14: { data: "06/12/2026", matches: [["BOLOGNA", "ROMA"], ["FIORENTINA", "CAGLIARI"], ["FROSINONE", "INTER"], ["GENOA", "TORINO"], ["JUVENTUS", "UDINESE"], ["LAZIO", "ATALANTA"], ["MILAN", "PARMA"], ["MONZA", "COMO"], ["NAPOLI", "LECCE"], ["VENEZIA", "SASSUOLO"]] },
+            15: { data: "13/12/2026", matches: [["ATALANTA", "GENOA"], ["CAGLIARI", "VENEZIA"], ["COMO", "BOLOGNA"], ["INTER", "TORINO"], ["JUVENTUS", "MONZA"], ["LAZIO", "ROMA"], ["LECCE", "SASSUOLO"], ["NAPOLI", "MILAN"], ["PARMA", "FIORENTINA"], ["UDINESE", "FROSINONE"]] },
+            16: { data: "20/12/2026", matches: [["ATALANTA", "NAPOLI"], ["FIORENTINA", "BOLOGNA"], ["FROSINONE", "LAZIO"], ["GENOA", "UDINESE"], ["LECCE", "INTER"], ["MILAN", "COMO"], ["ROMA", "JUVENTUS"], ["SASSUOLO", "PARMA"], ["TORINO", "CAGLIARI"], ["VENEZIA", "MONZA"]] },
+            17: { data: "03/01/2027", matches: [["BOLOGNA", "JUVENTUS"], ["CAGLIARI", "GENOA"], ["COMO", "LECCE"], ["FIORENTINA", "LAZIO"], ["INTER", "SASSUOLO"], ["MONZA", "MILAN"], ["PARMA", "NAPOLI"], ["ROMA", "FROSINONE"], ["TORINO", "VENEZIA"], ["UDINESE", "ATALANTA"]] },
+            18: { data: "06/01/2027", matches: [["ATALANTA", "COMO"], ["FROSINONE", "BOLOGNA"], ["GENOA", "MONZA"], ["JUVENTUS", "TORINO"], ["LAZIO", "INTER"], ["LECCE", "PARMA"], ["MILAN", "FIORENTINA"], ["NAPOLI", "CAGLIARI"], ["SASSUOLO", "UDINESE"], ["VENEZIA", "ROMA"]] },
+            19: { data: "10/01/2027", matches: [["BOLOGNA", "GENOA"], ["CAGLIARI", "SASSUOLO"], ["COMO", "LAZIO"], ["FIORENTINA", "LECCE"], ["INTER", "JUVENTUS"], ["MONZA", "FROSINONE"], ["PARMA", "VENEZIA"], ["ROMA", "MILAN"], ["TORINO", "ATALANTA"], ["UDINESE", "NAPOLI"]] },
+            20: { data: "17/01/2027", matches: [["ATALANTA", "ROMA"], ["CAGLIARI", "COMO"], ["JUVENTUS", "GENOA"], ["LAZIO", "BOLOGNA"], ["LECCE", "UDINESE"], ["MILAN", "TORINO"], ["NAPOLI", "FIORENTINA"], ["PARMA", "INTER"], ["SASSUOLO", "MONZA"], ["VENEZIA", "FROSINONE"]] },
+            21: { data: "24/01/2027", matches: [["BOLOGNA", "ATALANTA"], ["COMO", "NAPOLI"], ["FIORENTINA", "SASSUOLO"], ["FROSINONE", "MILAN"], ["GENOA", "PARMA"], ["INTER", "VENEZIA"], ["JUVENTUS", "CAGLIARI"], ["LECCE", "TORINO"], ["MONZA", "LAZIO"], ["ROMA", "UDINESE"]] },
+            22: { data: "31/01/2027", matches: [["ATALANTA", "FIORENTINA"], ["CAGLIARI", "PARMA"], ["GENOA", "LECCE"], ["LAZIO", "VENEZIA"], ["MILAN", "JUVENTUS"], ["MONZA", "ROMA"], ["NAPOLI", "INTER"], ["SASSUOLO", "COMO"], ["TORINO", "FROSINONE"], ["UDINESE", "BOLOGNA"]] },
+            23: { data: "07/02/2027", matches: [["ATALANTA", "LAZIO"], ["BOLOGNA", "MILAN"], ["COMO", "MONZA"], ["FIORENTINA", "UDINESE"], ["INTER", "CAGLIARI"], ["JUVENTUS", "SASSUOLO"], ["LECCE", "NAPOLI"], ["PARMA", "FROSINONE"], ["ROMA", "TORINO"], ["VENEZIA", "GENOA"]] },
+            24: { data: "14/02/2027", matches: [["BOLOGNA", "COMO"], ["CAGLIARI", "LAZIO"], ["FROSINONE", "FIORENTINA"], ["GENOA", "ATALANTA"], ["INTER", "MILAN"], ["MONZA", "LECCE"], ["NAPOLI", "JUVENTUS"], ["ROMA", "PARMA"], ["TORINO", "SASSUOLO"], ["UDINESE", "VENEZIA"]] },
+            25: { data: "21/02/2027", matches: [["ATALANTA", "MONZA"], ["COMO", "TORINO"], ["FIORENTINA", "INTER"], ["JUVENTUS", "BOLOGNA"], ["LAZIO", "NAPOLI"], ["LECCE", "FROSINONE"], ["MILAN", "GENOA"], ["SASSUOLO", "ROMA"], ["UDINESE", "PARMA"], ["VENEZIA", "CAGLIARI"]] },
+            26: { data: "28/02/2027", matches: [["BOLOGNA", "LECCE"], ["CAGLIARI", "UDINESE"], ["COMO", "MILAN"], ["FROSINONE", "NAPOLI"], ["GENOA", "LAZIO"], ["INTER", "ATALANTA"], ["MONZA", "JUVENTUS"], ["PARMA", "SASSUOLO"], ["ROMA", "VENEZIA"], ["TORINO", "FIORENTINA"]] },
+            27: { data: "07/03/2027", matches: [["ATALANTA", "TORINO"], ["FIORENTINA", "VENEZIA"], ["JUVENTUS", "ROMA"], ["LAZIO", "FROSINONE"], ["LECCE", "COMO"], ["MILAN", "CAGLIARI"], ["MONZA", "GENOA"], ["NAPOLI", "PARMA"], ["SASSUOLO", "BOLOGNA"], ["UDINESE", "INTER"]] },
+            28: { data: "14/03/2027", matches: [["BOLOGNA", "NAPOLI"], ["CAGLIARI", "FIORENTINA"], ["COMO", "UDINESE"], ["FROSINONE", "MONZA"], ["GENOA", "ROMA"], ["LAZIO", "JUVENTUS"], ["MILAN", "SASSUOLO"], ["PARMA", "LECCE"], ["TORINO", "INTER"], ["VENEZIA", "ATALANTA"]] },
+            29: { data: "21/03/2027", matches: [["CAGLIARI", "NAPOLI"], ["COMO", "FIORENTINA"], ["FROSINONE", "UDINESE"], ["GENOA", "INTER"], ["LECCE", "LAZIO"], ["MILAN", "MONZA"], ["ROMA", "BOLOGNA"], ["SASSUOLO", "ATALANTA"], ["TORINO", "JUVENTUS"], ["VENEZIA", "PARMA"]] },
+            30: { data: "04/04/2027", matches: [["ATALANTA", "MILAN"], ["FIORENTINA", "GENOA"], ["INTER", "FROSINONE"], ["JUVENTUS", "COMO"], ["MONZA", "BOLOGNA"], ["NAPOLI", "VENEZIA"], ["PARMA", "LAZIO"], ["ROMA", "LECCE"], ["SASSUOLO", "CAGLIARI"], ["UDINESE", "TORINO"]] },
+            31: { data: "11/04/2027", matches: [["BOLOGNA", "VENEZIA"], ["CAGLIARI", "ATALANTA"], ["FIORENTINA", "MILAN"], ["FROSINONE", "GENOA"], ["INTER", "ROMA"], ["JUVENTUS", "LECCE"], ["LAZIO", "TORINO"], ["NAPOLI", "SASSUOLO"], ["PARMA", "COMO"], ["UDINESE", "MONZA"]] },
+            32: { data: "18/04/2027", matches: [["ATALANTA", "UDINESE"], ["BOLOGNA", "CAGLIARI"], ["COMO", "FROSINONE"], ["FIORENTINA", "PARMA"], ["MILAN", "NAPOLI"], ["MONZA", "INTER"], ["ROMA", "LAZIO"], ["SASSUOLO", "LECCE"], ["TORINO", "GENOA"], ["VENEZIA", "JUVENTUS"]] },
+            33: { data: "25/04/2027", matches: [["CAGLIARI", "MONZA"], ["FROSINONE", "ROMA"], ["GENOA", "SASSUOLO"], ["INTER", "BOLOGNA"], ["JUVENTUS", "FIORENTINA"], ["LAZIO", "COMO"], ["LECCE", "MILAN"], ["NAPOLI", "UDINESE"], ["PARMA", "ATALANTA"], ["VENEZIA", "TORINO"]] },
+            34: { data: "02/05/2027", matches: [["FIORENTINA", "ROMA"], ["FROSINONE", "ATALANTA"], ["GENOA", "CAGLIARI"], ["INTER", "LECCE"], ["LAZIO", "SASSUOLO"], ["NAPOLI", "MONZA"], ["PARMA", "MILAN"], ["TORINO", "BOLOGNA"], ["UDINESE", "JUVENTUS"], ["VENEZIA", "COMO"]] },
+            35: { data: "09/05/2027", matches: [["BOLOGNA", "FROSINONE"], ["CAGLIARI", "TORINO"], ["COMO", "ATALANTA"], ["JUVENTUS", "INTER"], ["LAZIO", "UDINESE"], ["LECCE", "FIORENTINA"], ["MILAN", "ROMA"], ["MONZA", "PARMA"], ["NAPOLI", "GENOA"], ["SASSUOLO", "VENEZIA"]] },
+            36: { data: "16/05/2027", matches: [["ATALANTA", "JUVENTUS"], ["BOLOGNA", "FIORENTINA"], ["COMO", "INTER"], ["LECCE", "CAGLIARI"], ["MILAN", "LAZIO"], ["MONZA", "VENEZIA"], ["ROMA", "NAPOLI"], ["SASSUOLO", "FROSINONE"], ["TORINO", "PARMA"], ["UDINESE", "GENOA"]] },
+            37: { data: "23/05/2027", matches: [["BOLOGNA", "PARMA"], ["CAGLIARI", "ROMA"], ["COMO", "GENOA"], ["JUVENTUS", "FROSINONE"], ["LAZIO", "FIORENTINA"], ["LECCE", "VENEZIA"], ["MILAN", "UDINESE"], ["MONZA", "TORINO"], ["NAPOLI", "ATALANTA"], ["SASSUOLO", "INTER"]] },
+            38: { data: "30/05/2027", matches: [["ATALANTA", "LECCE"], ["FIORENTINA", "MONZA"], ["FROSINONE", "CAGLIARI"], ["GENOA", "BOLOGNA"], ["INTER", "LAZIO"], ["PARMA", "JUVENTUS"], ["ROMA", "COMO"], ["TORINO", "NAPOLI"], ["UDINESE", "SASSUOLO"], ["VENEZIA", "MILAN"]] }
+        };
 
-                if (data.status === "success") {
-                    loading.style.display = "none";
-                    container.innerHTML = "";
+        let currentGiornata = 1;
 
-                    data.matches.forEach(match => {
-                        const card = document.createElement("div");
-                        card.className = "match-card";
-                        card.innerHTML = `
-                            <div class="teams">⚽ ${match.casa.nome} vs ${match.trasferta.nome}</div>
-                            <div>
-                                <p><span class="badge">CASA</span> ${match.casa.dettagli.join(", ") || "Formazione in aggiornamento"}</p>
-                                <p><span class="badge">TRASFERTA</span> ${match.trasferta.dettagli.join(", ") || "Formazione in aggiornamento"}</p>
-                            </div>
-                        `;
-                        container.appendChild(card);
-                    });
-                } else {
-                    loading.innerHTML = "<p>⚠️ Errore nel recupero dei dati dal server.</p>";
-                }
-            } catch (error) {
-                console.error("Errore di connessione:", error);
-                loading.innerHTML = "<p>❌ Impossibile connettersi al server backend. Riprova tra pochi secondi.</p>";
+        function populateGiornateDropdown() {
+            const select = document.getElementById('select-giornata');
+            select.innerHTML = '';
+            for (let i = 1; i <= 38; i++) {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.innerText = `Giornata ${i}`;
+                select.appendChild(opt);
+            }
+            select.value = currentGiornata;
+            updateGiornataInfo();
+        }
+
+        function updateGiornataInfo() {
+            const dateSpan = document.getElementById('giornata-date-info');
+            if (calendarioSerieA[currentGiornata]) {
+                dateSpan.innerText = `Data prevista: ${calendarioSerieA[currentGiornata].data}`;
             }
         }
 
-        caricaFormazioni();
+        function changeGiornata(val) {
+            currentGiornata = parseInt(val);
+            updateGiornataInfo();
+            renderProbabiliFormazioniSerieA(0);
+        }
+
+        function switchTab(tabName, element) {
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.top-nav button').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            
+            if (element) element.classList.add('active');
+            const topBtn = document.getElementById(`topnav-${tabName}`);
+            if (topBtn) topBtn.classList.add('active');
+
+            document.getElementById(`view-${tabName}`).classList.add('active');
+        }
+
+        function switchTabName(tabName) {
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.top-nav button').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+
+            const topBtn = document.getElementById(`topnav-${tabName}`);
+            if (topBtn) topBtn.classList.add('active');
+
+            document.getElementById(`view-${tabName}`).classList.add('active');
+        }
+
+        async function caricaDati() {
+            populateGiornateDropdown();
+            fetchConsigli('ALL');
+            fetchFormazione();
+            renderProbabiliFormazioniSerieA(0);
+        }
+
+        async function fetchConsigli(ruolo) {
+            try {
+                const res = await fetch(`${API_URL}/consigli?ruolo=${ruolo}`);
+                const data = await res.json();
+                
+                renderConsigliList(data);
+                renderStatsTable(data);
+                renderVotiMedia(data);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function renderConsigliList(giocatori) {
+            const list = document.getElementById('advice-list');
+            const listFull = document.getElementById('advice-list-full');
+            list.innerHTML = '';
+            if (listFull) listFull.innerHTML = '';
+
+            giocatori.forEach(g => {
+                const score = Math.round(g.is_score);
+                const html = `
+                    <div class="advice-card">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div class="advice-score">${score}%</div>
+                            <div>
+                                <strong style="color: #fff; font-size: 14px;">${g.nome}</strong>
+                                <div style="font-size: 11px; color: #888;">${g.squadra} • ${g.ruolo}</div>
+                            </div>
+                        </div>
+                        <button class="btn-outline" style="font-size: 11px;" onclick="alert('${g.spiegazione}')">Consiglia</button>
+                    </div>
+                `;
+                list.innerHTML += html;
+                if (listFull) listFull.innerHTML += html;
+            });
+        }
+
+        async function fetchFormazione() {
+            try {
+                const res = await fetch(`${API_URL}/formazione-ottimale`);
+                const data = await res.json();
+                
+                document.getElementById('formation-select').innerText = `Modulo: ${data.modulo}`;
+                document.getElementById('sidebar-formation-badge').innerText = data.modulo;
+
+                renderPitch(data.titolari);
+                renderBench(data.panchina);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function renderPitch(titolari) {
+            const pitch = document.getElementById('tactical-pitch');
+            pitch.innerHTML = '';
+
+            const ruoli = ['A', 'C', 'D', 'P'];
+            ruoli.forEach(r => {
+                const row = document.createElement('div');
+                row.className = 'field-row';
+                titolari.filter(g => g.ruolo === r).forEach(g => {
+                    row.innerHTML += `
+                        <div class="player-pitch-item">
+                            <div class="player-avatar">${g.ruolo}</div>
+                            <div class="player-box">
+                                <div style="font-size: 9px; font-weight: bold; color: #fff;">${g.nome}</div>
+                                <div style="font-size: 8px; color: #facc15;">${g.is}%</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                pitch.appendChild(row);
+            });
+        }
+
+        function renderBench(panchina) {
+            const bench = document.getElementById('bench-list');
+            bench.innerHTML = '';
+            panchina.slice(0, 4).forEach(g => {
+                bench.innerHTML += `
+                    <div style="background: #141A26; border: 1px solid #232D3F; border-radius: 8px; padding: 8px; text-align: center;">
+                        <div style="font-size: 11px; font-weight: bold; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${g.nome}</div>
+                        <div style="font-size: 9px; color: #facc15;">${g.is}% IS</div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderProbabiliFormazioniSerieA(selectedMatchIdx) {
+            const selector = document.getElementById('match-selector-container');
+            const details = document.getElementById('match-details-container');
+            
+            const giornataData = calendarioSerieA[currentGiornata];
+            if (!giornataData) return;
+
+            const matches = giornataData.matches;
+
+            selector.innerHTML = '';
+            matches.forEach((m, idx) => {
+                selector.innerHTML += `
+                    <div class="match-chip ${idx === selectedMatchIdx ? 'active' : ''}" onclick="renderProbabiliFormazioniSerieA(${idx})">
+                        <strong style="color: #facc15; font-size: 12px;">${m[0]} vs ${m[1]}</strong>
+                    </div>
+                `;
+            });
+
+            const currentMatch = matches[selectedMatchIdx] || matches[0];
+            const casa = currentMatch[0];
+            const ospite = currentMatch[1];
+
+            details.innerHTML = `
+                <!-- CASA -->
+                <div class="team-formation-box">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #232D3F; padding-bottom: 8px;">
+                        <h3 style="font-size: 16px; color: #facc15;">${casa}</h3>
+                        <span style="font-size: 12px; background: #0B0F17; padding: 2px 8px; border-radius: 6px; border: 1px solid #232D3F;">Probabili Titolari</span>
+                    </div>
+
+                    <h4 style="font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 8px;">Titolari Probabili (Giornata ${currentGiornata})</h4>
+                    <ul style="list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 16px;">
+                        <li style="background: #0B0F17; padding: 6px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #232D3F;"><i class="fa-solid fa-user-check" style="color:#22c55e; font-size: 10px;"></i> Portiere Tit.</li>
+                        <li style="background: #0B0F17; padding: 6px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #232D3F;"><i class="fa-solid fa-user-check" style="color:#22c55e; font-size: 10px;"></i> Difensore 1</li>
+                        <li style="background: #0B0F17; padding: 6px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #232D3F;"><i class="fa-solid fa-user-check" style="color:#22c55e; font-size: 10px;"></i> Difensore 2</li>
+                        <li style="background: #0B0F17; padding: 6px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #232D3F;"><i class="fa-solid fa-user-check" style="color:#22c55e; font-size: 10px;"></i> Centrocampista 1</li>
+                        <li style="background: #0B0F17; padding: 6px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #232D3F;"><i class="fa-solid fa-user-check" style="color:#22c55e; font-size: 10px;"></i> Attaccante 1</li>
+                    </ul>
+
+                    <h4 style="font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 6px;">Ballottaggi Live</h4>
+                    <div style="font-size: 11px; color: #d1d5db; margin-bottom: 4px; background: #1C2433; padding: 6px 10px; border-radius: 4px;">⚖️ Aggiornamento formazioni in corso...</div>
+                </div>
+
+                <!-- OSPITE -->
+                <div class="team-formation-box">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #232D3F; padding-bottom: 8px;">
+                        <h3 style="font-size: 16px; color: #facc15;">${ospite}</h3>
+                        <span style="font-size: 12px; background: #0B0F17; padding: 2px 8px; border-radius: 6px; border: 1px solid #232D3F;">Probabili Titolari</span>
+                    </div>
+
+                    <h4 style="font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 8px;">Titolari Probabili (Giornata ${currentGiornata})</h4>
+                    <ul style="list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 16px;">
+                        <li style="background: #0B0F17; padding: 6px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #232D3F;"><i class="fa-solid fa-user-check" style="color:#22c55e; font-size: 10px;"></i> Portiere Tit.</li>
+                        <li style="background: #0B0F17; padding: 6px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #232D3F;"><i class="fa-solid fa-user-check" style="color:#22c55e; font-size: 10px;"></i> Difensore 1</li>
+                        <li style="background: #0B0F17; padding: 6px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #232D3F;"><i class="fa-solid fa-user-check" style="color:#22c55e; font-size: 10px;"></i> Centrocampista 1</li>
+                        <li style="background: #0B0F17; padding: 6px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; border: 1px solid #232D3F;"><i class="fa-solid fa-user-check" style="color:#22c55e; font-size: 10px;"></i> Attaccante 1</li>
+                    </ul>
+
+                    <h4 style="font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 6px;">Ballottaggi Live</h4>
+                    <div style="font-size: 11px; color: #d1d5db; margin-bottom: 4px; background: #1C2433; padding: 6px 10px; border-radius: 4px;">⚖️ Aggiornamento formazioni in corso...</div>
+                </div>
+            `;
+        }
+
+        // RENDERING STATISTICHE GIOCATORI (MEDIA, FANTAMEDIA, GOL, ASSIST)
+        function renderStatsTable(giocatori) {
+            const tbody = document.getElementById('stats-table-body');
+            tbody.innerHTML = '';
+            giocatori.forEach(g => {
+                const mv = g.media_voto ? g.media_voto.toFixed(2) : '6.00';
+                const fm = g.fantamedia ? g.fantamedia.toFixed(2) : '6.00';
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="font-weight: bold; color: #fff;">${g.nome}</td>
+                        <td><span style="color: #facc15; font-weight: bold;">${g.ruolo}</span></td>
+                        <td>${g.squadra}</td>
+                        <td style="color: #58a6ff; font-weight: bold;">${mv}</td>
+                        <td style="color: #facc15; font-weight: bold;">${fm}</td>
+                        <td>⚽ ${g.gol || 0}</td>
+                        <td>👟 ${g.assist || 0}</td>
+                        <td style="color: #22c55e; font-weight: bold;">${Math.round(g.is_score)}%</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // RENDERING VOTI E MEDIA
+        function renderVotiMedia(giocatori) {
+            const container = document.getElementById('voti-list-container');
+            container.innerHTML = '';
+            giocatori.forEach(g => {
+                const mv = g.media_voto ? g.media_voto.toFixed(2) : '6.00';
+                const fm = g.fantamedia ? g.fantamedia.toFixed(2) : '6.00';
+                container.innerHTML += `
+                    <div style="background: #141A26; border: 1px solid #232D3F; border-radius: 10px; padding: 12px;">
+                        <div style="font-weight: bold; color: #fff; font-size: 13px;">${g.nome}</div>
+                        <div style="font-size: 10px; color: #888; margin-bottom: 8px;">${g.squadra} (${g.ruolo})</div>
+                        <div style="display: flex; justify-content: space-between; font-size: 11px; border-top: 1px solid #232D3F; padding-top: 6px;">
+                            <span>Media: <strong style="color: #58a6ff;">${mv}</strong></span>
+                            <span>FM: <strong style="color: #facc15;">${fm}</strong></span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function filterRole(btn, role) {
+            document.querySelectorAll('.badge-role').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            fetchConsigli(role);
+        }
+
+        document.addEventListener('DOMContentLoaded', caricaDati);
     </script>
 </body>
 </html>
