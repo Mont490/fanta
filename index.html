@@ -3,22 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Probabili Formazioni Live</title>
+    <title>Probabili Formazioni Serie A - Live</title>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f9; }
-        .match-card { background: white; padding: 15px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .teams { font-weight: bold; font-size: 1.2em; color: #333; }
-        .details { margin-top: 10px; font-size: 0.9em; color: #555; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background-color: #0b0f17; color: #ffffff; }
+        h1 { color: #facc15; text-align: center; }
+        .match-card { background: #141a26; border: 1px solid #232d3f; padding: 16px; margin-bottom: 16px; border-radius: 10px; }
+        .teams { font-weight: bold; font-size: 1.2em; color: #facc15; margin-bottom: 8px; }
+        .status-box { text-align: center; color: #9ca3af; padding: 20px; background: #141a26; border-radius: 8px; border: 1px solid #232d3f; }
+        .badge { background: #1c2433; color: #22c55e; padding: 4px 8px; border-radius: 4px; font-size: 0.85em; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <h1>Probabili Formazioni Serie A</h1>
-    <div id="loading">Caricamento formazioni in corso...</div>
+    <div id="loading" class="status-box">
+        <p>⏳ Connessione al server in corso...</p>
+        <small style="color: #6b7280;">(Se il server Render era in pausa, l'avvio richiede circa 30 secondi)</small>
+    </div>
     <div id="matches-container"></div>
 
     <script>
-        // URL del tuo backend su Render
         const API_URL = "https://fanta-6jkw.onrender.com";
 
         async function caricaFormazioni() {
@@ -37,24 +41,23 @@
                         const card = document.createElement("div");
                         card.className = "match-card";
                         card.innerHTML = `
-                            <div class="teams">${match.casa.nome} vs ${match.trasferta.nome}</div>
-                            <div class="details">
-                                <p><strong>Ballottaggi Casa:</strong> ${match.casa.ballottaggi.join(", ") || "Nessuno"}</p>
-                                <p><strong>Ballottaggi Trasferta:</strong> ${match.trasferta.ballottaggi.join(", ") || "Nessuno"}</p>
+                            <div class="teams">⚽ ${match.casa.nome} vs ${match.trasferta.nome}</div>
+                            <div>
+                                <p><span class="badge">CASA</span> ${match.casa.dettagli.join(", ") || "Formazione in aggiornamento"}</p>
+                                <p><span class="badge">TRASFERTA</span> ${match.trasferta.dettagli.join(", ") || "Formazione in aggiornamento"}</p>
                             </div>
                         `;
                         container.appendChild(card);
                     });
                 } else {
-                    loading.textContent = "Errore nel caricamento dei dati.";
+                    loading.innerHTML = "<p>⚠️ Errore nel recupero dei dati dal server.</p>";
                 }
             } catch (error) {
                 console.error("Errore di connessione:", error);
-                loading.textContent = "Impossibile connettersi al server backend.";
+                loading.innerHTML = "<p>❌ Impossibile connettersi al server backend. Riprova tra pochi secondi.</p>";
             }
         }
 
-        // Avvia la chiamata appena carica la pagina
         caricaFormazioni();
     </script>
 </body>
